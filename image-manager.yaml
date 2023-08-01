@@ -1,0 +1,523 @@
+openapi: "3.0.3"
+info:
+  description: "image manager interface of the image server"
+  version: "1.0.0"
+  title: "image manager"
+security:
+  - basicAuth: []
+servers:
+  - url: '{protocol}://{host}:{port}/vpimage/rest/images/v1/'
+    variables:
+      protocol:
+        enum:
+          - http
+          - https
+        default: http
+      host:
+        enum:
+          - 172.81.0.1
+          - localhost
+          - image-server
+          - 127.0.0.1
+        default: image-server
+      port:
+        enum:
+          - '80'
+          - '8080'
+          - '8580'
+        default: '8580'
+paths:
+  /internal/image-id:
+    get:
+      tags:
+        - Image Internal
+      operationId: getImageId
+      parameters:
+        - name: "uuid"
+          in: "query"
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "ok"
+          content:
+            "text/plain":
+              schema:
+                type: integer
+                format: "int64"
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+  /image:
+    put:
+      tags:
+        - Image
+      operationId: uploadImage
+      parameters:
+        - name: "imageName"
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: "mimeType"
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: "imageType"
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/ImageType'
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: byte
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/ImageMetadata'
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+    get:
+      tags:
+        - Image
+      operationId: getImage
+      parameters:
+        - name: "id"
+          in: "query"
+          required: true
+          schema:
+            type: string
+        - name: "idType"
+          in: "query"
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdType'
+        - name: "maxWidth"
+          in: "query"
+          schema:
+            type: integer
+        - name: "maxHeight"
+          in: "query"
+          schema:
+            type: integer
+        - name: "quality"
+          in: "query"
+          schema:
+            type: number
+            format: "float"
+      responses:
+        "200":
+          description: "ok"
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: byte
+          headers:
+            "Content-Type":
+              schema:
+                type: string
+                format: "mimeType"
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+  /internal/image/import:
+    put:
+      tags:
+        - Image Internal
+      operationId: importImage
+      parameters:
+        - name: "imageType"
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/ImageType'
+        - name: "imageUrl"
+          in: "query"
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "ok"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/Image'
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+  /image/metadata:
+    get:
+      tags:
+        - Image Metadata
+      operationId: getImageMetadata
+      parameters:
+        - name: "imageId"
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: "int64"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/ImageMetadata'
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+  /internal/image/publish:
+    delete:
+      tags:
+        - Image Internal
+      operationId: revokeImage
+      parameters:
+        - name: "imageId"
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: "int64"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/Image'
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+    put:
+      tags:
+        - Image Internal
+      operationId: publishImage
+      parameters:
+        - name: "imageId"
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: "int64"
+        - name: "validFrom"
+          in: query
+          schema:
+            type: string
+            format: date-time
+            description: "URL escaped ISO format, ex.: 2022-07-29T15:03:36%2B02:00"
+        - name: "validTill"
+          in: query
+          schema:
+            type: string
+            format: date-time
+            description: "URL escaped ISO format, ex.: 2022-07-29T15:03:36%2B02:00"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                type: integer
+                format: "int64"
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+  /internal/image/copy:
+    put:
+      tags:
+        - Image Internal
+      operationId: copyImageInfo
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: '#/components/schemas/Image'
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/Image'
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+  /internal/image/copy-id:
+    post:
+      tags:
+        - Image Internal
+      operationId: copyImageById
+      parameters:
+        - name: "imageId"
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: "int64"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                type: integer
+                format: "int64"
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+  /internal/image:
+    get:
+      tags:
+        - Image Internal
+      operationId: getImageInfoById
+      parameters:
+        - in: "query"
+          name: "id"
+          schema:
+            type: string
+          required: true
+        - in: "query"
+          name: "idType"
+          schema:
+            $ref: '#/components/schemas/IdType'
+          required: true
+      responses:
+        "200":
+          description: "ok"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/Image'
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+    delete:
+      tags:
+        - Image Internal
+      operationId: deleteImageInfo
+      parameters:
+        - name: "imageId"
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: "int64"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/Image'
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+  /internal/image/direct:
+    get:
+      tags:
+        - Image Internal
+      operationId: getImageInfoFromImageServer
+      deprecated: true
+      parameters:
+        - name: "imageId"
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: "int64"
+        - name: "imageType"
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/ImageType'
+        - name: "width"
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: "height"
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/Image'
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+  /internal/image/deduplicated-id:
+    get:
+      tags:
+        - Image Internal
+      operationId: getDeduplicatedId
+      parameters:
+        - name: "imageId"
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: "int64"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                type: integer
+                format: "int64"
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+  /image/configuration:
+    get:
+      tags:
+        - Image Metadata
+      operationId: getConfiguration
+      parameters:
+        - name: "imageType"
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/ImageType"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/ImageConfiguration'
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    ImageConfiguration:
+      type: object
+      properties:
+        minWidth:
+          type: integer
+        maxWidth:
+          type: integer
+        minHeight:
+          type: integer
+        maxHeight:
+          type: integer
+        maxFileSize:
+          type: integer
+    ImageMetadata:
+      type: object
+      properties:
+        uuid:
+          type: string
+        name:
+          type: string
+    IdType:
+      type: string
+      enum:
+        - "IMAGE_ID"
+        - "UUID"
+    ImageType:
+      type: string
+      enum:
+        - "APP_BANNER"
+        - "COUPON"
+        - "LOYALTY_PARTNERSHIP_EXCHANGE_VOUCHER"
+        - "LOYALTY_PROVIDER_IMAGE"
+        - "NEWSLETTER_IMAGE"
+        - "STAMPCARD_BANNER"
+        - "STAMPCARD_STAMP"
+        - "STORE_IMAGE"
+        - "STORE_MAP_IMAGE"
+        - "USER_AVATAR"
+        - "RETAILER_IMAGE"
+        - "RECIPE_IMAGE"
+        - "GIFT_CERTIFICATE_IMAGE"
+        - "LINK_STRUCTURE_IMAGE"
+        - "RETAILER_FLYER_IMAGE"
+        - "RETAILER_OFFER_GROUP_IMAGE"
+        - "RETAILER_OFFER_IMAGE"
+        - "RETAILER_TEASER_IMAGE"
+        - "SYMBOL_SET_IMAGE"
+        - "USER_IMAGE"
+        - "ITEM"
+        - "DEFAULT"
+        - "UNKNOWN"
+    Image:
+      type: object
+      required:
+        - id
+        - teaserImageType
+        - mimeType
+        - deleted
+      properties:
+        id:
+          type: integer
+          format: "int64"
+        name:
+          type: string
+        modificationDate:
+          type: string
+          format: date-time
+          description: "example: 2022-08-01T10:03:36"
+        teaserImageType:
+          type: integer
+        mimeType:
+          type: string
+        endOfLife:
+          type: string
+          format: date
+          description: "example: 2022-08-01"
+        validFrom:
+          type: string
+          format: date-time
+          description: "example: 1990-01-28T11:43:56.000000Z[GMT]"
+        validTill:
+          type: string
+          format: date-time
+          description: "example: 1990-01-28T11:43:56.000000Z[GMT]"
+        imageType:
+          $ref: '#/components/schemas/ImageType'
+        deleted:
+          type: boolean
+        imageSize:
+          type: integer
+        imageHash:
+          type: string
+        deduplicatedImageId:
+          type: integer
+          format: "int64"

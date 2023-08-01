@@ -1,0 +1,168 @@
+openapi: "3.0.3"
+info:
+  title: "Image internal"
+  description: "Internal image server rest endpoints"
+  version: "1.0.0"
+servers:
+  - url: '{protocol}://{host}:{port}/internal/vpimage/rest/'
+paths:
+  /publish/images-without-lifetime:
+    post:
+      tags:
+        - Images Publish
+      operationId: publishImagesWithoutLifetime
+      parameters:
+        - name: "imageIds"
+          in: "query"
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "ok"
+          content:
+            "text/plain":
+              schema:
+                type: string
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+  /publish/images-with-lifetime:
+    post:
+      tags:
+        - Images Publish
+      operationId: publishImagesWithoutLifetime
+      parameters:
+        - name: "imageIds"
+          in: "query"
+          description: "Ids of images with separator ',' or ';'"
+          required: true
+          schema:
+            type: string
+        - name: "validFrom"
+          in: "query"
+          description: "The start of time range for image validity."
+          schema:
+            type: string
+            format: date-time
+        - name: "validTill"
+          in: "query"
+          description: "The end of time range for image validity."
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: "ok"
+          content:
+            "text/plain":
+              schema:
+                type: string
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+  /image-deduplication/image/lifetime:
+    get:
+      tags:
+        - Image Deduplication
+      operationId: getLifetimeForImageLifetimeKeyFromDeduplicatedImageIdAndBoImageType
+      parameters:
+        - name: "deduplicatedImageId"
+          in: "query"
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: "ok"
+          content:
+            "text/plain":
+              schema:
+                type: string
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+  /image-deduplication/cache/deduplication/status-report:
+    get:
+      tags:
+        - Image Deduplication
+      operationId: getStatusReportForImageDeduplicationCache
+      responses:
+        "200":
+          description: "ok"
+          content:
+            "text/plain":
+              schema:
+                type: string
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+  /image-deduplication/cache/lifetime/status-report:
+    get:
+      tags:
+        - Image Deduplication
+      operationId: getStatusReportForImageLifetimeCache
+      responses:
+        "200":
+          description: "ok"
+          content:
+            "text/plain":
+              schema:
+                type: string
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+  /image-deduplication/cache/clear:
+    delete:
+      tags:
+        - Image Deduplication
+      operationId: clearCache
+      responses:
+        "200":
+          description: "ok"
+          content:
+            "text/plain":
+              schema:
+                type: string
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+  /image-registry/cache/lifetime/status-report:
+    get:
+      tags:
+        - Image Registry
+      operationId: getStatusReportForImageLifetimeCache
+      responses:
+        "200":
+          description: "ok"
+          content:
+            "text/plain":
+              schema:
+                type: string
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
+  /image-registry/cache/clear:
+    delete:
+      tags:
+        - Image Registry
+      operationId: clearCache
+      responses:
+        "200":
+          description: "ok"
+          content:
+            "text/plain":
+              schema:
+                type: string
+        "405":
+          description: "Invalid input"
+        "401":
+          description: "unauthorized"
