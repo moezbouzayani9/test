@@ -1,0 +1,44 @@
+{{- if .Values.ingress.enabled -}}
+{{- $serviceName := include "image-server.name" . -}}
+{{- $servicePort := .Values.service.http.port -}}
+{{- $ingressHosts := .Values.global.ingress.mcaServices.hosts -}}
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "image-server.fullname" . }}
+  labels:
+    app: {{ include "image-server.name" . }}
+    chart: {{ include "image-server.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    {{- with .Values.ingress.annotations -}}
+    {{ toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.class | default .Values.global.ingress.class }}
+  tls:
+    {{- toYaml .Values.global.ingress.mcaServices.tls | nindent 4 }}
+  rules:
+  {{- range $ingressHosts }}
+    - host: {{ . | quote }}
+      http:
+        paths:
+          - path: /vpimage(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ $serviceName }}
+                port:
+                  number: {{ $servicePort }}
+          - path: /internal(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ $serviceName }}
+                port:
+                  number: {{ $servicePort }}
+  {{- end }}
+{{- end }}

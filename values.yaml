@@ -1,0 +1,159 @@
+# Specifies if chart is project chart
+# if true, projectRegistry and projectPrefix are used when constructing image repository
+project: false
+
+appRoot: image-server
+
+replicaCount: 1
+
+image:
+  repository: image-server
+  # It's possible to override image repository (ignoring global values for registry/prefix)
+  repositoryOverride:
+  # Image pull police; IfNotPresent|Always
+  pullPolicy: Always
+  # Image tag; default is .Chart.Version
+  tag:
+
+# Liveness & Readiness probe settings
+livenessProbe:
+  tcpSocket:
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  failureThreshold: 10
+
+readinessProbe:
+  httpGet:
+    path: "/vpimage/rest/info"
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 5
+
+terminationGracePeriodSeconds: 60
+
+service:
+  type: ClusterIP
+  http:
+    port: 8080
+  metrics:
+    port: 1111
+  jmx:
+    port: 1090
+
+ingress:
+  enabled: true
+  class:
+  annotations:
+
+# Settings based on global.deploymentType
+# deploymentType = azure
+resources:
+  local:
+    limits:
+      memory: 2048Mi
+    requests:
+      memory: 2048Mi
+  default:
+    limits:
+      cpu: 1000m
+      memory: 2048Mi
+    requests:
+      cpu: 200m
+      memory: 2048Mi
+
+securityContext: {}
+
+serviceAccount: ""
+
+podSecurityContext:
+  fsGroup: 1000
+
+podRestartPolicy: Always
+
+# additional pod annotations
+podAnnotations: {}
+
+# Extra environment variables to append to this nodeGroup
+# This will be appended to the current 'env:' key. You can use any of the kubernetes env
+# syntax here
+extraEnvs: []
+#  - name: MY_ENVIRONMENT_VAR
+#    value: the_value_goes_here
+
+# additionals labels
+labels: { }
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+hostAliases: {}
+# # Uncomment to add item to /etc/hosts
+#  - ip: 1.2.3.4
+#    hostnames:
+#    - "foo.bar.com"
+
+nameOverride: ""
+fullnameOverride: ""
+
+# sharing the default "globals" so the chart can start even without umbrella chart/values.yaml file
+global:
+  # registry for product images and infrastructure
+  registry: gksoftwaredev.azurecr.io
+  # prefix for product images
+  productPrefix: mca/
+
+  # imagePullPolicy override for all product images
+  # if empty, pod image.pullPolicy is used
+  imagePullPolicy:
+
+  # secrets for pulling container images
+  # add project secret for project registry
+  imagePullSecrets:
+    - name: docker-registry-key
+  # - name: docker-registry-key-<project>
+
+  deploymentType: default
+
+  ingress:
+    # Ingress controller class - selects correct ingress controller for env.
+    # annotation: kubernetes.io/ingress.class
+    class:
+    mcaServices:
+      hosts:
+        - mca-services.local.gk-software.com
+      tls:
+        - hosts:
+            - mca-services.local.gk-software.com
+          secretName: mca-services-tls-secret
+
+imageserver:
+  dbSettings:
+    mcaForceStrictDataSourceAvailabilityCheck: "true"
+    main:
+      connectionTimeout: 5000
+      connectionValidationTimeout: 5000
+      minPoolSize: 1
+      maxPoolSize: 5
+      mcaMainDataSourceSslRequired: "true"
+
+    image:
+      connectionTimeout: 5000
+      connectionValidationTimeout: 5000
+      minPoolSize: 1
+      maxPoolSize: 5
+      mcaImageDataSourceSslRequired: "true"
+
+    mh:
+      connectionTimeout: 5000
+      connectionValidationTimeout: 5000
+      minPoolSize: 1
+      maxPoolSize: 5
+      mcaMhDataSourceSslRequired: "true"
+
+  adminSettings:
+    user: "admin"
+    passwordHash: "631b2c84174e18317a38b3e428aecb4c1270fb5414f32cace00b7d6e75250d18"

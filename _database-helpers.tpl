@@ -1,0 +1,55 @@
+{{- define "image-server.db-settings.envFrom" -}}
+- configMapRef:
+    name: "db-settings"
+- secretRef:
+    name: "db-settings"
+{{- end -}}
+
+{{- define "image-server.db-settings.envs" -}}
+
+- name: MCA_AS_MAIN_DATA_SOURCE_HOST_NAME
+  value: "$(MAIN_DB_HOST_NAME)"
+
+- name: MCA_AS_MAIN_DATA_SOURCE_HOST_PORT
+  value: "$(MAIN_DB_HOST_PORT)"
+
+- name: MCA_AS_MAIN_DATA_SOURCE_NAME
+  value: "$(MAIN_DB_NAME)"
+
+- name: MCA_AS_MAIN_DATA_SOURCE_USER_NAME
+  value: "$(MAIN_DB_IMAGE_APP_AUTHENTICATOR_USER)$(MAIN_DB_USER_CONNECTION_SUFFIX)"
+
+- name: MCA_AS_MAIN_DATA_SOURCE_USER_PASSWORD
+  value: "$(MAIN_DB_IMAGE_APP_AUTHENTICATOR_PASSWORD)"
+
+- name: MCA_IMAGE_DATA_SOURCE_HOST_NAME
+  value: "$(IMAGE_DB_HOST_NAME)"
+
+- name: MCA_IMAGE_DATA_SOURCE_HOST_PORT
+  value: "$(IMAGE_DB_HOST_PORT)"
+
+- name: MCA_IMAGE_DATA_SOURCE_NAME
+  value: "$(IMAGE_DB_NAME)"
+
+- name: MCA_IMAGE_DATA_SOURCE_USER_NAME
+  value: "$(IMAGE_DB_IMAGE_APP_WRITER_USER)$(IMAGE_DB_USER_CONNECTION_SUFFIX)"
+
+- name: MCA_IMAGE_DATA_SOURCE_USER_PASSWORD
+  value: "$(IMAGE_DB_IMAGE_APP_WRITER_PASSWORD)"
+
+- name: MCA_MH_DATA_SOURCE_HOST_NAME
+  value: "$(BO_DB_HOST_NAME)"
+
+- name: MCA_MH_DATA_SOURCE_HOST_PORT
+  value: "$(BO_DB_HOST_PORT)"
+
+- name: MCA_MH_DATA_SOURCE_NAME
+  value: "$(BO_DB_NAME)"
+
+- name: MCA_MH_DATA_SOURCE_USER_NAME
+  value: "$(BO_DB_MICRO_SERVICE_APP_USER_NAME)$(BO_DB_USER_CONNECTION_SUFFIX)"
+
+- name: MCA_MH_DATA_SOURCE_USER_PASSWORD
+  value: "$(BO_DB_MICRO_SERVICE_APP_USER_PASSWORD)"
+
+{{- end -}}

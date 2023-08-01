@@ -1,0 +1,40 @@
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+whitelistObjectNames:
+  - "java.lang:type=OperatingSystem"
+  - "com.zaxxer.hikari:type=*"
+
+rules:
+  - pattern: 'java.lang<type=OperatingSystem><>(\w+):'
+    name: jvm_os_$1
+    help: JVM OperatingSystem
+    type: GAUGE
+
+  - pattern: 'com.zaxxer.hikari<type=PoolConfig \((\w+)\)><>minimum_idle:'
+    name: data_source_min_pool_size
+    attrNameSnakeCase: true
+    labels:
+      name: $1
+    help: Data source $1 min pool size
+    type: GAUGE
+  - pattern: 'com.zaxxer.hikari<type=PoolConfig \((\w+)\)><>maximum_pool_size:'
+    name: data_source_max_pool_size
+    attrNameSnakeCase: true
+    labels:
+      name: $1
+    help: Data source $1 max pool size
+    type: GAUGE
+  - pattern: 'com.zaxxer.hikari<type=Pool \((\w+)\)><>total_connections:'
+    name: data_source_open_connections_count
+    attrNameSnakeCase: true
+    labels:
+      name: $1
+    help: Data source $1 open connections count
+    type: GAUGE
+  - pattern: 'com.zaxxer.hikari<type=Pool \((\w+)\)><>active_connections:'
+    name: data_source_used_connections_count
+    attrNameSnakeCase: true
+    labels:
+      name: $1
+    help: Data source $1 used connections count
+    type: GAUGE

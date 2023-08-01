@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ include "image-server.fullname" . }}"
+  labels:
+    app: {{ include "image-server.name" . }}
+    chart: {{ include "image-server.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    {{- range $key, $value := .Values.labels }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+  annotations:
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "image-server.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "image-server.name" . }}
+        release: {{ .Release.Name }}
+      annotations:
+        app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+        gk-software.com/release-timestamp: {{ now | unixEpoch | quote }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: {{ .Values.service.metrics.port | quote }}
+        {{- range $key, $value := .Values.podAnnotations }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
+    spec:
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName }}
+      {{- end }}
+      {{- if .Values.serviceAccount }}
+      serviceAccount: {{ .Values.serviceAccount }}
+      {{- end }}
+      securityContext:
+        {{ toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers: []
+      # init containers if needed
+
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ include "image-server.image" . | quote }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy | default .Values.image.pullPolicy }}
+          resources:
+            {{- include "image-server.resources" . | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: metrics
+              containerPort: {{ .Values.service.metrics.port }}
+              protocol: TCP
+            - name: jmx
+              containerPort: {{ .Values.service.jmx.port }}
+              protocol: TCP
+
+          env:
+            {{ include "image-server.db-settings.envs" . | nindent 12 }}
+            {{- if .Values.extraEnvs }}
+            {{ toYaml .Values.extraEnvs | nindent 12 }}
+            {{- end }}
+
+          envFrom:
+            {{ include "image-server.db-settings.envFrom" . | nindent 12 }}
+            - configMapRef:
+                name: {{ include "image-server.name" . | quote }}
+            - secretRef:
+                name: {{ include "image-server.name" . | quote }}
+
+          volumeMounts:
+          # volumeMounts if needed
+      volumes:
+      # volumes if needed
+      terminationGracePeriodSeconds: {{ default 180 .Values.terminationGracePeriodSeconds }}
+      imagePullSecrets:
+      {{- toYaml .Values.global.imagePullSecrets | nindent 8 }}
+      restartPolicy: {{ .Values.podRestartPolicy }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end -}}
+      {{- with .Values.hostAliases }}
+      hostAliases:
+        {{- toYaml . | nindent 8 }}
+      {{- end -}}

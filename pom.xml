@@ -1,63 +1,107 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- Project identification -->
-    <artifactId>mod-image-server-api</artifactId>
-    <name>Image server - API</name>
-    <packaging>jar</packaging>
-
-    <!-- Link to parent POM -->
     <parent>
         <groupId>com.gk-software.gkr.mca.image-server</groupId>
-        <artifactId>image-server-api-parent</artifactId>
+        <artifactId>image-server-docker-parent</artifactId>
         <version>6.72.0-SNAPSHOT</version>
     </parent>
 
-    <build>
-        <resources>
-            <resource>
-                <directory>${basedir}/src/main/resources</directory>
-                <includes>
-                    <include>openapi/*</include>
-                </includes>
-                <filtering>false</filtering>
-            </resource>
-            <resource>
-                <directory>${project.build.directory}/generated-resources</directory>
-                <includes>
-                    <include>openapi/*</include>
-                </includes>
-                <filtering>false</filtering>
-            </resource>
-        </resources>
+    <artifactId>image-server-docker</artifactId>
+    <packaging>pom</packaging>
 
+    <properties>
+        <docker.image.name>image-server</docker.image.name>
+        <docker.application.artifactId>image-server</docker.application.artifactId>
+    </properties>
+
+    <build>
         <plugins>
-            <!-- Upload OpenAPI -->
             <plugin>
-                <groupId>com.gk-software</groupId>
-                <artifactId>swagger-confluence-maven-plugin</artifactId>
+                <artifactId>maven-resources-plugin</artifactId>
                 <executions>
+                    <!-- Copy Docker resources (entrypoint.sh, etc.) -->
                     <execution>
-                        <id>publish-image-server-api</id>
-                        <phase>${swagger-confluence.phase}</phase>
+                        <id>copy-resources</id>
+                        <phase>validate</phase>
                         <goals>
-                            <goal>publish</goal>
+                            <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <attachment>
-                                ${project.basedir}/src/main/resources/openapi/image-manager.yaml
-                            </attachment>
-                            <documentTitle>Image server - image manager api
-                                ${image-server-api-version} -
-                                ${swagger-confluence.documentVersion}
-                            </documentTitle>
+                            <outputDirectory>${docker.staging.dir}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/docker</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                                <resource>
+                                    <directory>src/main/copy</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <artifactItems>
+                        <artifactItem>
+                            <groupId>com.gk-software.gkr.mca.image-server</groupId>
+                            <artifactId>${docker.application.artifactId}</artifactId>
+                            <version>${project.version}</version>
+                            <type>jar</type>
+                            <overWrite>true</overWrite>
+                            <outputDirectory>${docker.staging.dir}/app</outputDirectory>
+                        </artifactItem>
+                    </artifactItems>
+                    <stripClassifier>true</stripClassifier>
+                    <stripVersion>true</stripVersion>
+                    <overWriteReleases>false</overWriteReleases>
+                    <overWriteSnapshots>true</overWriteSnapshots>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>docker</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>io.fabric8</groupId>
+                        <artifactId>docker-maven-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!-- This profile creates and pushes the helm chart(s) of the application -->
+        <profile>
+            <id>helm</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.kiwigrid</groupId>
+                        <artifactId>helm-maven-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
