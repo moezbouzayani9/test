@@ -25,7 +25,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-ext</artifactId>
-            <version>1.7.32</version>
+            <version>1.7.36</version>
         </dependency>
         <!--    End of Overwrite    -->
 
@@ -186,13 +186,11 @@
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 
                                     <mainClass>com.valuephone.image.Main</mainClass>
                                 </transformer>
-                                <transformer
-                                        implementation="com.github.edwgiz.maven_shade_plugin.log4j2_cache_transformer.PluginsCacheFileTransformer">
+                                <transformer implementation="com.github.edwgiz.maven_shade_plugin.log4j2_cache_transformer.PluginsCacheFileTransformer">
                                 </transformer>
                             </transformers>
                             <!-- Exclude pom files from meta-inf that causes Fortify to report false positive vulnerability -->
@@ -227,10 +225,8 @@
                         </goals>
                         <configuration>
                             <target>
-                                <move file="${project.build.directory}/${project.build.finalName}.jar"
-                                      tofile="${project.build.directory}/${project.build.finalName}.jar.original" />
-                                <move file="${project.build.directory}/${project.build.finalName}-standalone.jar"
-                                      tofile="${project.build.directory}/${project.build.finalName}.jar" />
+                                <move file="${project.build.directory}/${project.build.finalName}.jar" tofile="${project.build.directory}/${project.build.finalName}.jar.original"/>
+                                <move file="${project.build.directory}/${project.build.finalName}-standalone.jar" tofile="${project.build.directory}/${project.build.finalName}.jar"/>
                             </target>
                         </configuration>
                     </execution>
